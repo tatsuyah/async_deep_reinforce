@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import sys
+import os.path
+import glob
 import numpy as np
 import cv2
-from ale_python_interface import ALEInterface
+from ale.ale_python_interface import ALEInterface
 
 from constants import ROM
 from constants import ACTION_SIZE
@@ -58,10 +60,15 @@ class GameState(object):
     elif sys.platform.startswith('linux'):
       self.ale.setBool(b'sound', True)
     self.ale.setBool(b'display_screen', True)
+    if os.path.exists("./agent-images"):
+      [os.remove(f) for f in glob.glob("./agent-images/*.png")]
+    else:
+      os.mkdir("./agent-images")
+    self.ale.setString(b"record_screen_dir", b"./agent-images")
 
   def reset(self):
     self.ale.reset_game()
-    
+
     # randomize initial state
     if self._no_op_max > 0:
       no_op = np.random.randint(0, self._no_op_max + 1)
@@ -69,20 +76,20 @@ class GameState(object):
         self.ale.act(0)
 
     _, _, x_t = self._process_frame(0, False)
-    
+
     self.reward = 0
     self.terminal = False
     self.s_t = np.stack((x_t, x_t, x_t, x_t), axis = 2)
-    
+
   def process(self, action):
     # convert original 18 action index to minimal action set index
     real_action = self.real_actions[action]
-    
+
     r, t, x_t1 = self._process_frame(real_action, True)
 
     self.reward = r
     self.terminal = t
-    self.s_t1 = np.append(self.s_t[:,:,1:], x_t1, axis = 2)    
+    self.s_t1 = np.append(self.s_t[:,:,1:], x_t1, axis = 2)
 
   def update(self):
     self.s_t = self.s_t1

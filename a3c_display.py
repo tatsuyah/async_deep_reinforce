@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+import os
 import tensorflow as tf
 import numpy as np
 import random
+import atexit
 
 from game_state import GameState
 from game_ac_network import GameACFFNetwork, GameACLSTMNetwork
@@ -18,7 +20,24 @@ from constants import USE_GPU
 from constants import USE_LSTM
 
 def choose_action(pi_values):
-  return np.random.choice(range(len(pi_values)), p=pi_values)  
+  return np.random.choice(range(len(pi_values)), p=pi_values)
+
+def record_video():
+  print('You pressed Ctrl+C!')
+
+  if os.path.exists("./agent.mov"):
+    input_word = input("agent.mov already exists. Are you sure to delete it? Press [y/n]: ")
+    if input_word is "y":
+      os.remove("./agent.mov")
+      print('Start generating the video...')
+      os.system('./videoRecordingExampleJoinMacOSX.sh')
+    else:
+      print("could not generate the video")
+
+  else:
+    os.system('./videoRecordingExampleJoinMacOSX.sh')
+
+atexit.register(record_video)
 
 # use CPU for display tool
 device = "/cpu:0"
@@ -50,6 +69,7 @@ else:
   print("Could not find old checkpoint")
 
 game_state = GameState(0, display=True, no_op_max=0)
+
 
 while True:
   pi_values = global_network.run_policy(sess, game_state.s_t)

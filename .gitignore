@@ -2,3 +2,5 @@
 tmp/*
 old/*
 checkpoints*/*
+agent-images/*
+agent.mov
